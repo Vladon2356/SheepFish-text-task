@@ -7,7 +7,7 @@ class Printer(models.Model):
         KITCHEN = 'kitchen', 'kitchen'
 
     name = models.CharField(max_length=100)
-    api_key = models.CharField(max_length=100)
+    api_key = models.CharField(max_length=100, unique=True)
     check_type = models.CharField(max_length=10, choices=PrinterCheckTypeChoices.choices)
     point_id = models.IntegerField()
 
