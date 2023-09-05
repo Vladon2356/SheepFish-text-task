@@ -1,3 +1,29 @@
 from django.db import models
 
-# Create your models here.
+from apps.printer.models import Printer
+
+
+class Check(models.Model):
+    class CheckTypeChoices(models.TextChoices):
+        CLIENT = 'client', 'client'
+        KITCHEN = 'kitchen', 'kitchen'
+
+    class StatusChoices(models.TextChoices):
+        NEW = 'new', 'new'
+        RENDERED = 'rendered', 'rendered'
+        PRINTED = 'printed', 'printed'
+
+    printer = models.ForeignKey(Printer, on_delete=models.CASCADE)
+    type = models.CharField(max_length=10, choices=CheckTypeChoices.choices)
+    order = models.JSONField()
+    status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.NEW)
+    pdf_file = models.FileField(upload_to='checks/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'check #{self.id} {self.type}'
+
+    class Meta:
+        verbose_name_plural = 'Checks'
+        verbose_name = 'Check'
+        ordering = ['-created_at']
