@@ -27,6 +27,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'apps.check.apps.CheckConfig',
+    'apps.printer.apps.PrinterConfig',
+
 ]
 
 MIDDLEWARE = [
