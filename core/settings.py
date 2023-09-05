@@ -7,7 +7,6 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 CORE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 SECRET_KEY = config(
     'SECRET_KEY',
     default="w4i=!)qh(v$f#u!22neqb2@p^*s6p^icziussmghgz)$5q5gju"
@@ -16,8 +15,6 @@ SECRET_KEY = config(
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='127.0.0.1')]
-
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -63,7 +60,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
 DATABASES = {
     'default': {
         'ENGINE': config("SQL_ENGINE", "django.db.backends.postgresql"),
@@ -74,9 +70,6 @@ DATABASES = {
         'PORT': config("SQL_PORT", "5432"),
     }
 }
-
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -93,7 +86,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -102,16 +94,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = (
-    os.path.join(CORE_DIR, 'apps/static'),
-)
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
