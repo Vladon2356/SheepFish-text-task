@@ -17,7 +17,7 @@ class Check(models.Model):
     type = models.CharField(max_length=10, choices=CheckTypeChoices.choices)
     order = models.JSONField()
     status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.NEW)
-    pdf_file = models.FileField(upload_to='checks/', null=True, blank=True)
+    pdf_file = models.FileField(upload_to='pdf/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
