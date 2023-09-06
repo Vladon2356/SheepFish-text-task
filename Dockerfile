@@ -26,6 +26,11 @@ RUN pip install -r requirements.txt
 # copy project
 COPY . $APP_HOME
 
+# copy entrypoint
+COPY ./entrypoint .
+RUN sed -i 's/\r$//g' entrypoint
+RUN chmod +x entrypoint
+
 # create the additional directories
 RUN mkdir -p $APP_HOME/staticfiles
 RUN mkdir -p $APP_HOME/media
@@ -33,3 +38,10 @@ RUN mkdir -p $APP_HOME/media
 COPY ./start .
 RUN sed -i 's/\r$//g' start
 RUN ["chmod", "+x", "start"]
+
+COPY ./start-celery-worker .
+RUN sed -i 's/\r$//g' start-celery-worker
+RUN ["chmod", "+x", "start-celery-worker"]
+
+# run entrypoint
+ENTRYPOINT ["sh", "/home/app/web/entrypoint"]
