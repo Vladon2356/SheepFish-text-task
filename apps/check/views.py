@@ -40,7 +40,11 @@ class CheckApiView(GenericAPIView):
         point_printer_ids = Printer.objects.filter(point_id=point_id).values_list('id', flat=True)
         for printer_id in point_printer_ids:
             serializer.save(printer_id=printer_id)
-            generate_pdf_for_check_task.delay(serializer.data)
+            file_name = generate_pdf_for_check_task.delay(serializer.data)
+            check = Check.objects.get(id=serializer.data['id'])
+            check.pdf_file = f'pdf/{file_name}'
+            check.status = 'rendered'
+            check.save()
         return Response({"id": serializer.data['id']}, status=status.HTTP_201_CREATED)
 
 
