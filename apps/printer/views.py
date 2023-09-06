@@ -1,13 +1,14 @@
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework import status
 
 from apps.printer.models import Printer
 from apps.printer.serializers import PrinterDetailSerializer
 
 
-class PrinterApiView(APIView):
+class PrinterApiView(GenericAPIView):
     """Check API view."""
+    serializer_class = PrinterDetailSerializer
 
     def get(self, request):
         """Get all checks."""
