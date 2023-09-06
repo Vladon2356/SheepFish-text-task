@@ -1,3 +1,23 @@
-from django.shortcuts import render
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
 
-# Create your views here.
+from apps.check.models import Check
+from apps.check.serializers import CheckDetailSerializer
+
+
+class CheckApiView(APIView):
+    """Check API view."""
+
+    def get(self, request):
+        """Get all checks."""
+        checks = Check.objects.all()
+        data = CheckDetailSerializer(checks, many=True).data
+        return Response(data)
+
+    def post(self, request):
+        """Create a check."""
+        serializer = CheckDetailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"id": serializer.data['id']}, status=status.HTTP_201_CREATED)
