@@ -1,7 +1,7 @@
 from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from rest_framework import parsers, renderers, status
+from rest_framework import status
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -72,12 +72,12 @@ class GetPdfFile(GenericAPIView):
     serializer_class = CheckDetailSerializer
 
     def get(self, request, order_number):
-        """Get pdf file for check by id."""
+        """Get pdf file for check by order number."""
         try:
             check = Check.objects.get(order__order_number=order_number)
         except Check.DoesNotExist:
             return Response({"error": "check not found"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             return FileResponse(open(check.pdf_file.path, 'rb'), content_type='application/pdf', as_attachment=True)
-        except FileNotFoundError:
+        except Exception:
             return Response({"error": "file not found"}, status=status.HTTP_400_BAD_REQUEST)
