@@ -1,6 +1,9 @@
+from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from rest_framework import status
+from rest_framework import parsers, renderers, status
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 from apps.check.models import Check
 from apps.check.serializers import CheckDetailSerializer, CheckCreateSerializer
@@ -42,3 +45,29 @@ class CheckApiView(GenericAPIView):
             generate_pdf_for_check(serializer.data)
             print('check post 2')
         return Response({"id": serializer.data['id']}, status=status.HTTP_201_CREATED)
+
+
+class GetNonPrintedChecksByPrinter(GenericAPIView):
+    serializer_class = CheckDetailSerializer
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'printer_id',
+                openapi.IN_QUERY,
+                description='Printer id',
+                type=openapi.TYPE_STRING
+            ),
+        ]
+    )
+    def get(self, request):
+        """Get all non-printed checks for printer by id."""
+        if request.query_params.get('printer_id'):
+            checks = Check.objects.filter(printer_id=request.query_params.get('printer_id'), check__status='rendered')
+            data = CheckDetailSerializer(checks, many=True).data
+            for item in checks:
+                item.status = 'printed'
+                item.save()
+            return Response(data)
+
+
