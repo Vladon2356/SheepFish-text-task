@@ -40,10 +40,7 @@ class CheckApiView(GenericAPIView):
         point_printer_ids = Printer.objects.filter(point_id=point_id).values_list('id', flat=True)
         for printer_id in point_printer_ids:
             serializer.save(printer_id=printer_id)
-            print(serializer.data)
-            # generate_pdf_for_check_task.delay(serializer.data)
-            generate_pdf_for_check(serializer.data)
-            print('check post 2')
+            generate_pdf_for_check_task.delay(serializer.data)
         return Response({"id": serializer.data['id']}, status=status.HTTP_201_CREATED)
 
 
@@ -71,3 +68,16 @@ class GetNonPrintedChecksByPrinter(GenericAPIView):
             return Response(data)
 
 
+class GetPdfFile(GenericAPIView):
+    serializer_class = CheckDetailSerializer
+
+    def get(self, request, order_number):
+        """Get pdf file for check by id."""
+        try:
+            check = Check.objects.get(order__order_number=order_number)
+        except Check.DoesNotExist:
+            return Response({"error": "check not found"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            return FileResponse(open(check.pdf_file.path, 'rb'), content_type='application/pdf', as_attachment=True)
+        except FileNotFoundError:
+            return Response({"error": "file not found"}, status=status.HTTP_400_BAD_REQUEST)
