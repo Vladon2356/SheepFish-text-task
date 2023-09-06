@@ -7,8 +7,8 @@ from core import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include('apps.check')),
-    path('api/v1/', include('apps.printer')),
+    path('api/v1/', include('apps.check.urls')),
+    path('api/v1/', include('apps.printer.urls')),
 ]
 
 if settings.DEBUG:
