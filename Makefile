@@ -12,4 +12,4 @@ remove_containers:
 
 
 create_admin:
-	python manage.py shell -c "from apps.staff.models import User; User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')"
+	python manage.py shell -c "from django.contrib.auth import get_user_model; get_user_model().objects.create_superuser('admin', 'admin@gmail.com', 'admin')"
