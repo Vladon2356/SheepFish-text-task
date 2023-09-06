@@ -64,11 +64,12 @@ class GetNonPrintedChecksByPrinter(GenericAPIView):
     def get(self, request):
         """Get all non-printed checks for printer by id."""
         if request.query_params.get('printer_id'):
-            checks = Check.objects.filter(printer_id=request.query_params.get('printer_id'), check__status='rendered')
+            checks = Check.objects.filter(printer_id=request.query_params.get('printer_id'), status='rendered')
             data = CheckDetailSerializer(checks, many=True).data
-            for item in checks:
-                item.status = 'printed'
-                item.save()
+            if checks.count() > 0:
+                for item in checks:
+                    item.status = 'printed'
+                    item.save()
             return Response(data)
 
 
