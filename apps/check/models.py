@@ -4,17 +4,13 @@ from apps.printer.models import Printer
 
 
 class Check(models.Model):
-    class CheckTypeChoices(models.TextChoices):
-        CLIENT = 'client', 'client'
-        KITCHEN = 'kitchen', 'kitchen'
-
     class StatusChoices(models.TextChoices):
         NEW = 'new', 'new'
         RENDERED = 'rendered', 'rendered'
         PRINTED = 'printed', 'printed'
 
     printer = models.ForeignKey(Printer, on_delete=models.CASCADE)
-    type = models.CharField(max_length=10, choices=CheckTypeChoices.choices)
+    type = models.CharField(max_length=10)
     order = models.JSONField()
     status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.NEW)
     pdf_file = models.FileField(upload_to='pdf/', null=True, blank=True)
@@ -22,6 +18,11 @@ class Check(models.Model):
 
     def __str__(self):
         return f'check #{self.id} {self.type}'
+
+    def save(self, *args, **kwargs):
+        self.type = self.printer.check_type
+        self.order['point_id'] = self.printer.point_id
+        super().save()
 
     class Meta:
         verbose_name_plural = 'Checks'
