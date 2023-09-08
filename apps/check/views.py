@@ -1,5 +1,4 @@
 from django.http import FileResponse
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from rest_framework import status
@@ -8,7 +7,6 @@ from drf_yasg.utils import swagger_auto_schema
 
 from apps.check.models import Check
 from apps.check import serializers
-from apps.check.services import generate_pdf_for_check
 from apps.printer.models import Printer
 from apps.check.tasks import generate_pdf_for_check_task
 
@@ -45,7 +43,6 @@ class CheckApiView(GenericAPIView):
 
     def get(self, request):
         """Get all checks."""
-        checks = Check.objects.all()
         page = self.paginate_queryset(self.queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
