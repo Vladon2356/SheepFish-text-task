@@ -17,6 +17,10 @@
     ```sh
     $ make create_superuser
     ```
+6. For start django project run start file 
+    ```sh
+    $ /bin/bash ./start
+    ```
 ## To get started
 By url http://0.0.0.0:8000/swagger/ there is swagger doc.
 
