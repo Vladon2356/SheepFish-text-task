@@ -3,6 +3,10 @@ from rest_framework import serializers
 from apps.check.models import Check
 
 
+class OrderCreateSerializer(serializers.Serializer):
+    order = serializers.JSONField(required=True)
+
+
 class CheckDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Check
@@ -14,4 +18,4 @@ class CheckCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Check
-        exclude = ('printer',)
+        exclude = ('printer', 'type')
