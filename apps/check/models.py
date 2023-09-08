@@ -21,7 +21,6 @@ class Check(models.Model):
 
     def save(self, *args, **kwargs):
         self.type = self.printer.check_type
-        self.order['point_id'] = self.printer.point_id
         super().save()
 
     class Meta:
