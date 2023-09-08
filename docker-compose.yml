@@ -11,26 +11,27 @@ services:
       - postgres_data:/var/lib/postgresql/data/
   redis:
     image: "redis:alpine"
-    hostname: redis
-
+    ports:
+      - "6379:6379"
   celery_worker:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: .env
+    env_file: .env.celery
     depends_on:
       - db
       - redis
     volumes:
       - .:/home/app/web
-      - media_volume:/home/app/web/media
+      - ./media:/home/app/web/media
+
     command: [ "sh","./start-celery-worker" ]
 
   wkhtmltopdf:
     image: openlabs/docker-wkhtmltopdf-aas
     restart: always
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - /tmp/wkhtmltopdf/:/tmp/wkhtmltopdf/
 volumes:
