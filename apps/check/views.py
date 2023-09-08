@@ -1,4 +1,5 @@
 from django.http import FileResponse
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from rest_framework import status
@@ -6,50 +7,55 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.check.models import Check
-from apps.check.serializers import CheckDetailSerializer, CheckCreateSerializer
+from apps.check import serializers
 from apps.check.services import generate_pdf_for_check
 from apps.printer.models import Printer
 from apps.check.tasks import generate_pdf_for_check_task
 
 
-class CheckApiView(GenericAPIView):
-    """Check API view."""
-    serializer_class = CheckDetailSerializer
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return CheckCreateSerializer
-        return CheckDetailSerializer
-
-    def get(self, request):
-        """Get all checks."""
-        checks = Check.objects.all()
-        data = CheckDetailSerializer(checks, many=True).data
-        return Response(data)
+class OrderCreateView(GenericAPIView):
+    """Order create view."""
+    serializer_class = serializers.OrderCreateSerializer
 
     def post(self, request):
-        """Create a check."""
-        serializer = CheckCreateSerializer(data=request.data)
+        """Create an order."""
+        serializer = serializers.OrderCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         point_id = serializer.validated_data['order']['point_id']
         if Printer.objects.filter(point_id=point_id).count() == 0:
-            return Response({"error": "no printer for this point"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "there is no printer for this point"}, status=status.HTTP_400_BAD_REQUEST)
         order_number = serializer.validated_data['order']['order_number']
         if Check.objects.filter(order__order_number=order_number).count() > 0:
             return Response({"error": "this order already exists"}, status=status.HTTP_400_BAD_REQUEST)
         point_printer_ids = Printer.objects.filter(point_id=point_id).values_list('id', flat=True)
         for printer_id in point_printer_ids:
-            serializer.save(printer_id=printer_id)
-            file_name = generate_pdf_for_check_task.delay(serializer.data)
-            check = Check.objects.get(id=serializer.data['id'])
-            check.pdf_file = f'pdf/{file_name}'
-            check.status = 'rendered'
-            check.save()
-        return Response({"id": serializer.data['id']}, status=status.HTTP_201_CREATED)
+            new_check = Check.objects.create(printer_id=printer_id, order=serializer.validated_data['order'])
+            file_name = generate_pdf_for_check_task.delay(check_id=new_check.id)
+            # file_name = generate_pdf_for_check(new_check)
+            new_check.pdf_file = f'pdf/{file_name}'
+            new_check.status = 'rendered'
+            new_check.save()
+        return Response({"Message": "Checks were created"}, status=status.HTTP_201_CREATED)
+
+
+class CheckApiView(GenericAPIView):
+    """Check API view."""
+    queryset = Check.objects.all()
+    serializer_class = serializers.CheckDetailSerializer
+
+    def get(self, request):
+        """Get all checks."""
+        checks = Check.objects.all()
+        page = self.paginate_queryset(self.queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(page, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetNonPrintedChecksByPrinter(GenericAPIView):
-    serializer_class = CheckDetailSerializer
+    serializer_class = serializers.CheckDetailSerializer
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -65,24 +71,26 @@ class GetNonPrintedChecksByPrinter(GenericAPIView):
         """Get all non-printed checks for printer by id."""
         if request.query_params.get('printer_id'):
             checks = Check.objects.filter(printer_id=request.query_params.get('printer_id'), status='rendered')
-            data = CheckDetailSerializer(checks, many=True).data
-            if checks.count() > 0:
-                for item in checks:
-                    item.status = 'printed'
-                    item.save()
-            return Response(data)
+            page = self.paginate_queryset(checks)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(page, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetPdfFile(GenericAPIView):
-    serializer_class = CheckDetailSerializer
+    serializer_class = serializers.CheckDetailSerializer
 
-    def get(self, request, order_number):
+    def get(self, request, check_id):
         """Get pdf file for check by order number."""
         try:
-            check = Check.objects.get(order__order_number=order_number)
+            check = Check.objects.get(id=check_id)
         except Check.DoesNotExist:
             return Response({"error": "check not found"}, status=status.HTTP_400_BAD_REQUEST)
         try:
+            check.status = 'printed'
+            check.save()
             return FileResponse(open(check.pdf_file.path, 'rb'), content_type='application/pdf', as_attachment=True)
         except Exception:
             return Response({"error": "file not found"}, status=status.HTTP_400_BAD_REQUEST)
