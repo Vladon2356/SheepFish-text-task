@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Check</title>
+</head>
+<body>
+<h1>Check</h1>
+<p>id : {{ check.id }}</p>
+<p>printer_id : {{ check.printer_id }}</p>
+<p>type : {{ check.type }}</p>
+<p>order :</p>
+    <ol>
+        {% for key, value in check.order.items %}
+            <li>{{ key }}: {{ value|safe  }}</li>
+        {% endfor %}
+    </ol>
+<p>status : {{ check.status }}</p>
+<p>created_at : {{ check.created_at }}</p>
+{% for key, value in data.items %}
+    {% if key == 'order' %}
+        {{ key }}: {{ value|safe  }}
+    {% else %}
+    <p>{{ key }} : {{ value }}</p>
+    {% endif %}
+{% endfor %}
+</body>
+</html>
