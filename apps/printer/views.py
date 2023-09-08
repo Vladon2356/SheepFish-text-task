@@ -8,12 +8,16 @@ from apps.printer.serializers import PrinterDetailSerializer
 
 class PrinterApiView(GenericAPIView):
     """Check API view."""
+    queryset = Printer.objects.all()
     serializer_class = PrinterDetailSerializer
 
     def get(self, request):
         """Get all checks."""
-        checks = Printer.objects.all()
-        data = PrinterDetailSerializer(checks, many=True).data
+        page = self.paginate_queryset(self.queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        data = self.get_serializer(page, many=True).data
         return Response(data)
 
     def post(self, request):
